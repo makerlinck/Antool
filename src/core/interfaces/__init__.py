@@ -19,5 +19,5 @@ __all__ = [
     "HttpResponse",
     "BaseWebSocketAdapter",
     "AsyncBaseWebSocketAdapter",
-    'BaseFileDownloader',
+    "BaseFileDownloader",
 ]

@@ -160,10 +160,12 @@ def main() -> int:
     for i, path in enumerate(image_paths):
         b64 = load_image_as_base64(path)
         if b64:
-            images.append({
-                "path": str(path),
-                "data": b64,
-            })
+            images.append(
+                {
+                    "path": str(path),
+                    "data": b64,
+                }
+            )
         if (i + 1) % 10 == 0:
             print(f"  Loaded {i + 1}/{len(image_paths)} images")
 

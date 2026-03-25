@@ -2,15 +2,17 @@
 
 支持优雅取消所有正在处理的任务。
 """
+
 import threading
 from enum import Enum, auto
 from typing import Optional
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 class CancelReason(Enum):
     """取消原因"""
+
     SHUTDOWN = auto()
     USER_REQUEST = auto()
     TIMEOUT = auto()
@@ -20,6 +22,7 @@ class CancelReason(Enum):
 @dataclass
 class CancelScope:
     """取消作用域"""
+
     is_cancelled: bool = False
     reason: Optional[CancelReason] = None
 

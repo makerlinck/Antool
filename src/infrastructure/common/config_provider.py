@@ -1,4 +1,7 @@
-
 from configs import *
-class ConfigProvider(CommonConfig,):
+
+
+class ConfigProvider(
+    CommonConfig,
+):
     pass

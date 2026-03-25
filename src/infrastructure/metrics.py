@@ -5,21 +5,18 @@
 - 请求延迟
 - 每张图片处理延迟
 """
-import json
+
 import threading
 import time
-from dataclasses import dataclass, field, asdict
-from datetime import datetime
-from pathlib import Path
+from dataclasses import dataclass, field
 from typing import Optional
 from uuid import uuid4
-
-import numpy as np
 
 
 @dataclass
 class MetricRecord:
     """指标记录"""
+
     uid: str = field(default_factory=lambda: uuid4().hex)
     start_time: float = field(default_factory=time.perf_counter)
     end_time: Optional[float] = None
@@ -40,6 +37,7 @@ class MetricRecord:
 @dataclass
 class RequestMetrics:
     """请求指标"""
+
     uid: str
     num_images: int
     total_latency_ms: float
@@ -145,7 +143,8 @@ class MetricsCollector:
             uid=self._current_request.uid,
             num_images=self._current_num_images,
             total_latency_ms=self._current_request.duration_ms or 0,
-            avg_latency_ms=(self._current_request.duration_ms or 0) / max(self._current_num_images, 1),
+            avg_latency_ms=(self._current_request.duration_ms or 0)
+            / max(self._current_num_images, 1),
         )
 
         with self._lock:

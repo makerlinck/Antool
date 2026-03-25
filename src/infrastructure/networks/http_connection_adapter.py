@@ -1,4 +1,5 @@
 """HTTP 连接适配器实现"""
+
 import json
 from typing import Any
 from urllib.request import urlopen, Request
@@ -15,7 +16,9 @@ class HttpConnectionAdapter(BaseHttpConnectionAdapter):
     基于标准库 urllib 实现，无外部依赖。
     """
 
-    def __init__(self, *, timeout: float = 30.0, default_headers: dict[str, str] | None = None):
+    def __init__(
+        self, *, timeout: float = 30.0, default_headers: dict[str, str] | None = None
+    ):
         self.timeout = timeout
         self.default_headers = default_headers or {}
 
@@ -25,7 +28,9 @@ class HttpConnectionAdapter(BaseHttpConnectionAdapter):
             merged.update(headers)
         return merged
 
-    def _do_request(self, method: str, url: str, headers: dict[str, str], body: Any) -> HttpResponse:
+    def _do_request(
+        self, method: str, url: str, headers: dict[str, str], body: Any
+    ) -> HttpResponse:
         """执行 HTTP 请求"""
         headers = self._build_headers(headers)
 
@@ -74,7 +79,9 @@ class AsyncHttpConnectionAdapter(AsyncBaseHttpConnectionAdapter):
     基于 aiohttp 实现。
     """
 
-    def __init__(self, *, timeout: float = 30.0, default_headers: dict[str, str] | None = None):
+    def __init__(
+        self, *, timeout: float = 30.0, default_headers: dict[str, str] | None = None
+    ):
         self.timeout = aiohttp.ClientTimeout(total=timeout)
         self.default_headers = default_headers or {}
         self._session: aiohttp.ClientSession | None = None

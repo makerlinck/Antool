@@ -5,27 +5,32 @@ from dataclasses import dataclass
 
 import numpy as np
 
-CENSORED_KEYS = frozenset("nude anus pussy ejaculation penis nipples naked fellatio urethra".split())
+CENSORED_KEYS = frozenset(
+    "nude anus pussy ejaculation penis nipples naked fellatio urethra".split()
+)
 
 
 @dataclass
 class RawTagResult:
     """原始标签过滤结果（未加权）"""
-    tags: list[tuple[str, float]]      # [(tag_name, score), ...]
-    tag_indices: list[int]              # 激活的标签索引
-    rating_scores: np.ndarray           # rating 原始分数 [safe, questionable, nsfw]
+
+    tags: list[tuple[str, float]]  # [(tag_name, score), ...]
+    tag_indices: list[int]  # 激活的标签索引
+    rating_scores: np.ndarray  # rating 原始分数 [safe, questionable, nsfw]
 
 
 @dataclass
 class TagResult:
     """最终标签评估结果（加权后）"""
-    tags: list[tuple[str, float]]       # [(tag_name, score), ...]
-    rating: tuple[str, float]           # (rating_tag, score)
+
+    tags: list[tuple[str, float]]  # [(tag_name, score), ...]
+    rating: tuple[str, float]  # (rating_tag, score)
+
 
 def filter_tags(
-        scores: np.ndarray,
-        lang_tags: list[str],
-        threshold: float,
+    scores: np.ndarray,
+    lang_tags: list[str],
+    threshold: float,
 ) -> RawTagResult:
     """
     纯标签过滤
@@ -54,16 +59,14 @@ def filter_tags(
     tags = [(lang_tags[idx], float(scores[idx])) for idx in activated_indices]
 
     return RawTagResult(
-        tags=tags,
-        tag_indices=activated_indices,
-        rating_scores=rating_scores.copy()
+        tags=tags, tag_indices=activated_indices, rating_scores=rating_scores.copy()
     )
 
 
 def weighted_result(
-        raw_result: RawTagResult,
-        lang_tags: list[str],
-        zero_tags: list[str],
+    raw_result: RawTagResult,
+    lang_tags: list[str],
+    zero_tags: list[str],
 ) -> TagResult:
     """
     加权处理 (最小计算单元 4)
@@ -101,7 +104,4 @@ def weighted_result(
         else:
             rating = (t_nsfw, float(rating_scores[2]))
 
-    return TagResult(
-        tags=raw_result.tags.copy(),
-        rating=rating
-    )
+    return TagResult(tags=raw_result.tags.copy(), rating=rating)

@@ -1,4 +1,5 @@
 """应用入口模块"""
+
 import sys
 from pathlib import Path
 

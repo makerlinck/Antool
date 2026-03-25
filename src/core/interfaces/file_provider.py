@@ -9,6 +9,7 @@ PathType = TypeVar("PathType")
 @dataclass
 class FileEntry(Generic[PathType, FileType]):
     """文件条目，包含路径和内容"""
+
     path: PathType
     content: FileType
 
@@ -44,7 +45,9 @@ class FileProvider(abc.ABC, Generic[FileType, PathType]):
         pass
 
     @abc.abstractmethod
-    def save(self, path: PathType, content: FileType, *, overwrite: bool = False) -> bool:
+    def save(
+        self, path: PathType, content: FileType, *, overwrite: bool = False
+    ) -> bool:
         """保存文件
 
         Args:

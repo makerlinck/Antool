@@ -3,6 +3,7 @@
 业务编排层，处理批量图像评估的完整流程。
 负责：批量处理、流式响应、指标收集、异常处理
 """
+
 import asyncio
 import base64
 import io
@@ -23,6 +24,7 @@ from infrastructure.metrics import get_metrics
 @dataclass
 class ImageData:
     """输入图像数据"""
+
     uid: str
     path: str
     image: Optional[np.ndarray]
@@ -32,6 +34,7 @@ class ImageData:
 @dataclass
 class BatchResult:
     """批量处理结果"""
+
     uid: str
     path: str
     rating: tuple
@@ -42,6 +45,7 @@ class BatchResult:
 @dataclass
 class BatchPerformance:
     """批量处理性能数据"""
+
     total_images: int
     valid_images: int
     decode_time_ms: float
@@ -113,13 +117,15 @@ class EvaluateImageInteractor:
         # 报告解码失败的图片
         for img in decoded_images:
             if img.error:
-                on_result(BatchResult(
-                    uid=img.uid,
-                    path=img.path,
-                    rating=("error", 0),
-                    tags=[],
-                    error=img.error,
-                ))
+                on_result(
+                    BatchResult(
+                        uid=img.uid,
+                        path=img.path,
+                        rating=("error", 0),
+                        tags=[],
+                        error=img.error,
+                    )
+                )
 
         if not valid_images:
             on_error("No valid images to process")

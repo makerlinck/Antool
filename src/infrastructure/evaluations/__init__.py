@@ -2,7 +2,6 @@
 The module Evaluations is based on [DeepDanbooru]( https://github.com/KichangKim/DeepDanbooru )Make modifications。
 """
 
-
 from typing import Iterator
 import numpy as np
 
@@ -10,14 +9,15 @@ from .preprocess import preprocess_image
 from .prediction import predict_scores
 from .filter import filter_tags, weighted_result
 
+
 def evaluate_image(
-        image_input: np.ndarray,
-        model,
-        lang_tags: list[str],
-        zero_tags: list[str],
-        threshold: float,
-        normalize: bool = True
-) -> tuple[tuple[str,float],list[tuple[str,float]]] | None:
+    image_input: np.ndarray,
+    model,
+    lang_tags: list[str],
+    zero_tags: list[str],
+    threshold: float,
+    normalize: bool = True,
+) -> tuple[tuple[str, float], list[tuple[str, float]]] | None:
     """
     评估单张图像的标签
 
@@ -41,4 +41,5 @@ def evaluate_image(
     # 输出
     return result.rating, result.tags
 
-__all__ = ['evaluate_image']
+
+__all__ = ["evaluate_image"]

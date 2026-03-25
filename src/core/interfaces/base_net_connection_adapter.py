@@ -8,6 +8,7 @@ ResponseData = TypeVar("ResponseData")
 @dataclass
 class HttpResponse:
     """HTTP 响应封装"""
+
     status_code: int
     content: bytes
     headers: dict[str, str]
@@ -19,6 +20,7 @@ class HttpResponse:
 
     def json(self) -> Any:
         import json
+
         return json.loads(self.content)
 
 
@@ -83,6 +85,7 @@ class AsyncBaseHttpConnectionAdapter(abc.ABC):
 # =============================================================================
 # WebSocket 适配器
 # =============================================================================
+
 
 class BaseWebSocketAdapter(abc.ABC):
     """同步 WebSocket 适配器抽象基类"""

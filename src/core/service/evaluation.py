@@ -2,6 +2,7 @@
 
 纯粹��标签评估业务逻辑，不依赖具体基础设施。
 """
+
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -11,12 +12,14 @@ import numpy as np
 @dataclass
 class EvaluationResult:
     """评估结果"""
+
     rating: tuple[str, float]
     tags: list[tuple[str, float]]
 
 
 class EvaluationModel(Protocol):
     """评估模型协议"""
+
     def predict(self, image: np.ndarray) -> np.ndarray: ...
 
 

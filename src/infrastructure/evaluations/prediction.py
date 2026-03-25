@@ -4,10 +4,11 @@
 
 import numpy as np
 
+
 def predict_scores(
-        image: np.ndarray,
-        model,
-        add_batch_dim: bool = True,
+    image: np.ndarray,
+    model,
+    add_batch_dim: bool = True,
 ) -> np.ndarray:
     """
     模型推理
@@ -27,8 +28,8 @@ def predict_scores(
 
 
 def predict_scores_batch(
-        images: list[np.ndarray],
-        model,
+    images: list[np.ndarray],
+    model,
 ) -> np.ndarray:
     """
     批量模型推理

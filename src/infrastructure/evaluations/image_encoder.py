@@ -2,6 +2,7 @@
 
 提供图像加载和编码功能，将图像文件转换为 numpy 数组。
 """
+
 from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO

@@ -7,6 +7,7 @@
 使用 UUID 追踪任务，结果与输入通过 UID 关联。
 支持任务取消和指标收集。
 """
+
 from concurrent.futures import ProcessPoolExecutor
 import logging
 import time
@@ -89,34 +90,36 @@ class BatchScheduler:
         # 1. 智能分批 - 让 batch 数量等于 worker 数量，最大化并行度
         num_batches = min(self.max_workers, len(tasks))
         batch_size = max(1, len(tasks) // num_batches)
-        batches = [
-            tasks[i:i + batch_size]
-            for i in range(0, len(tasks), batch_size)
-        ]
+        batches = [tasks[i : i + batch_size] for i in range(0, len(tasks), batch_size)]
 
         # 2. 构建所有 UID 到预期结果的映射
         uid_to_result: dict[str, EvaluationResult] = {}
 
         # 3. 提交所有任务
-        logger.info(f"[scheduler] Creating ProcessPoolExecutor with {self.max_workers} workers, {len(batches)} batches (batch_size={batch_size})")
+        logger.info(
+            f"[scheduler] Creating ProcessPoolExecutor with {self.max_workers} workers, {len(batches)} batches (batch_size={batch_size})"
+        )
         with ProcessPoolExecutor(max_workers=self.max_workers) as pool:
-            futures = [
-                pool.submit(_process_batch_wrapper, batch)
-                for batch in batches
-            ]
+            futures = [pool.submit(_process_batch_wrapper, batch) for batch in batches]
 
             # 4. 收集结果，按 UID 存储
             for i, future in enumerate(futures):
                 # 检查取消状态
                 if cancellation.is_cancelled:
-                    logger.warning(f"[scheduler] Cancelled while waiting for batch {i+1}/{len(futures)}")
+                    logger.warning(
+                        f"[scheduler] Cancelled while waiting for batch {i+1}/{len(futures)}"
+                    )
                     for f in futures:
                         f.cancel()
                     raise CancelledError(cancellation.reason or cancellation._reason)
 
-                logger.info(f"[scheduler] Waiting for batch {i+1}/{len(futures)} result...")
+                logger.info(
+                    f"[scheduler] Waiting for batch {i+1}/{len(futures)} result..."
+                )
                 batch_results = future.result()
-                logger.info(f"[scheduler] Batch {i+1} done in {time.perf_counter()-t0:.3f}s, got {len(batch_results)} results")
+                logger.info(
+                    f"[scheduler] Batch {i+1} done in {time.perf_counter()-t0:.3f}s, got {len(batch_results)} results"
+                )
                 for result in batch_results:
                     uid_to_result[result.uid] = result
 

@@ -3,6 +3,7 @@
 纯协议层，只处理 WebSocket 收发。
 所有业务逻辑委托给 interactors。
 """
+
 import asyncio
 import json
 import logging
@@ -122,7 +123,7 @@ async def _handle_batch(
     interactor = EvaluateImageInteractor(
         processor=_evaluation_interactor._processor,
         scheduler=_evaluation_interactor._scheduler,
-        enable_metrics=True
+        enable_metrics=True,
     )
     logger.info("[ws] Interactor created")
 
@@ -144,7 +145,9 @@ async def _handle_batch(
                     if msg.get("type") == "result":
                         results_sent += 1
                         if verbose:
-                            logger.info(f"[ws] Sent result {results_sent}: {msg.get('path')}")
+                            logger.info(
+                                f"[ws] Sent result {results_sent}: {msg.get('path')}"
+                            )
                 except Exception as e:
                     logger.warning(f"[ws] Send failed: {e}")
                     connection_closed = True
@@ -157,13 +160,15 @@ async def _handle_batch(
         """同步回调 - 将结果放入发送队列"""
         if connection_closed:
             return
-        send_queue.put_nowait({
-            "type": "result",
-            "uid": result.uid,
-            "path": result.path,
-            "rating": result.rating,
-            "tags": result.tags,
-        })
+        send_queue.put_nowait(
+            {
+                "type": "result",
+                "uid": result.uid,
+                "path": result.path,
+                "rating": result.rating,
+                "tags": result.tags,
+            }
+        )
 
     def on_error(msg: str):
         """同步错误回调"""
@@ -184,19 +189,23 @@ async def _handle_batch(
 
         # 发送性能信息
         if perf and not connection_closed:
-            logger.info(f"[ws] Batch perf: {perf.total_time_ms:.1f}ms for {perf.valid_images} images")
+            logger.info(
+                f"[ws] Batch perf: {perf.total_time_ms:.1f}ms for {perf.valid_images} images"
+            )
             try:
-                await ws.send_json({
-                    "type": "performance",
-                    "data": {
-                        "total_images": perf.total_images,
-                        "valid_images": perf.valid_images,
-                        "decode_time_ms": perf.decode_time_ms,
-                        "inference_time_ms": perf.inference_time_ms,
-                        "total_time_ms": perf.total_time_ms,
-                        "system": perf.system_info,
+                await ws.send_json(
+                    {
+                        "type": "performance",
+                        "data": {
+                            "total_images": perf.total_images,
+                            "valid_images": perf.valid_images,
+                            "decode_time_ms": perf.decode_time_ms,
+                            "inference_time_ms": perf.inference_time_ms,
+                            "total_time_ms": perf.total_time_ms,
+                            "system": perf.system_info,
+                        },
                     }
-                })
+                )
             except Exception as e:
                 logger.warning(f"[ws] Failed to send performance: {e}")
 

@@ -8,6 +8,7 @@
 │  weighted_result(raw_result, zero_tags) → TagResult         │  加权处理
 └─────────────────────────────────────────────────────────────┘
 """
+
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,31 +21,37 @@ import tensorflow as tf
 tf.config.optimizer.set_jit(True)  # 启用XLA加速
 
 # 模块级常量
-CENSORED_KEYS = frozenset("nude anus pussy ejaculation penis nipples naked fellatio urethra".split())
+CENSORED_KEYS = frozenset(
+    "nude anus pussy ejaculation penis nipples naked fellatio urethra".split()
+)
 
 
 # ============================================================================
 # 数据结构
 # ============================================================================
 
+
 @dataclass
 class RawTagResult:
     """原始标签过滤结果（未加权）"""
-    tags: list[tuple[str, float]]      # [(tag_name, score), ...]
-    tag_indices: list[int]              # 激活的标签索引
-    rating_scores: np.ndarray           # rating 原始分数 [safe, questionable, nsfw]
+
+    tags: list[tuple[str, float]]  # [(tag_name, score), ...]
+    tag_indices: list[int]  # 激活的标签索引
+    rating_scores: np.ndarray  # rating 原始分数 [safe, questionable, nsfw]
 
 
 @dataclass
 class TagResult:
     """最终标签评估结果（加权后）"""
-    tags: list[tuple[str, float]]       # [(tag_name, score), ...]
-    rating: tuple[str, float]           # (rating_tag, score)
+
+    tags: list[tuple[str, float]]  # [(tag_name, score), ...]
+    rating: tuple[str, float]  # (rating_tag, score)
 
 
 # ============================================================================
 # 图像预处理 (最小单元 1)
 # ============================================================================
+
 
 @tf.function
 def _decode_image(image_path: str) -> tf.Tensor:
@@ -55,14 +62,14 @@ def _decode_image(image_path: str) -> tf.Tensor:
 
 
 def transform_and_pad_image(
-        image: np.ndarray,
-        target_width: int,
-        target_height: int,
-        scale: float | None = None,
-        rotation: float | None = None,
-        shift: tuple[float, float] | None = None,
-        order: int = 1,
-        mode: str = "edge",
+    image: np.ndarray,
+    target_width: int,
+    target_height: int,
+    scale: float | None = None,
+    rotation: float | None = None,
+    shift: tuple[float, float] | None = None,
+    order: int = 1,
+    mode: str = "edge",
 ) -> np.ndarray:
     """应用仿射变换处理图像，并通过边缘像素扩展填充至目标尺寸"""
     image_height, image_width = image.shape[:2]
@@ -110,9 +117,9 @@ def transform_and_pad_image(
 
 
 def preprocess_image(
-        image_input: Path | str | np.ndarray,
-        target_size: tuple[int, int],
-        normalize: bool = True,
+    image_input: Path | str | np.ndarray,
+    target_size: tuple[int, int],
+    normalize: bool = True,
 ) -> np.ndarray | None:
     """
     图像预处理 (最小计算单元 1)
@@ -160,10 +167,11 @@ def preprocess_image(
 # 模型推理 (最小计算单元 2)
 # ============================================================================
 
+
 def predict_scores(
-        image: np.ndarray,
-        model: Any,
-        add_batch_dim: bool = True,
+    image: np.ndarray,
+    model: Any,
+    add_batch_dim: bool = True,
 ) -> np.ndarray:
     """
     模型推理 (最小计算单元 2)
@@ -183,8 +191,8 @@ def predict_scores(
 
 
 def predict_scores_batch(
-        images: list[np.ndarray],
-        model: Any,
+    images: list[np.ndarray],
+    model: Any,
 ) -> np.ndarray:
     """
     批量模型推理
@@ -207,10 +215,11 @@ def predict_scores_batch(
 # 结果过滤 (最小单元 3) - 纯过滤，无加权逻辑
 # ============================================================================
 
+
 def filter_tags(
-        scores: np.ndarray,
-        lang_tags: list[str],
-        threshold: float,
+    scores: np.ndarray,
+    lang_tags: list[str],
+    threshold: float,
 ) -> RawTagResult:
     """
     纯标签过滤 (最小计算单元 3)
@@ -239,9 +248,7 @@ def filter_tags(
     tags = [(lang_tags[idx], float(scores[idx])) for idx in activated_indices]
 
     return RawTagResult(
-        tags=tags,
-        tag_indices=activated_indices,
-        rating_scores=rating_scores.copy()
+        tags=tags, tag_indices=activated_indices, rating_scores=rating_scores.copy()
     )
 
 
@@ -249,10 +256,11 @@ def filter_tags(
 # 加权处理 (最小单元 4) - 敏感词检测等加权逻辑
 # ============================================================================
 
+
 def weighted_result(
-        raw_result: RawTagResult,
-        lang_tags: list[str],
-        zero_tags: list[str],
+    raw_result: RawTagResult,
+    lang_tags: list[str],
+    zero_tags: list[str],
 ) -> TagResult:
     """
     加权处理 (最小计算单元 4)
@@ -289,23 +297,21 @@ def weighted_result(
         else:
             rating = (t_nsfw, float(rating_scores[2]))
 
-    return TagResult(
-        tags=raw_result.tags.copy(),
-        rating=rating
-    )
+    return TagResult(tags=raw_result.tags.copy(), rating=rating)
 
 
 # ============================================================================
 # 高层 API (组合最小单元)
 # ============================================================================
 
+
 def evaluate_image(
-        image_input: Path | str,
-        model: Any,
-        lang_tags: list[str],
-        zero_tags: list[str],
-        threshold: float,
-        normalize: bool = True
+    image_input: Path | str,
+    model: Any,
+    lang_tags: list[str],
+    zero_tags: list[str],
+    threshold: float,
+    normalize: bool = True,
 ) -> Iterator[tuple[str, float]] | None:
     """
     评估单张图像的标签
@@ -334,13 +340,13 @@ def evaluate_image(
 
 
 def evaluate_batch(
-        image_inputs: list[Path | str],
-        model: Any,
-        lang_tags: list[str],
-        zero_tags: list[str],
-        threshold: float,
-        batch_size: int = 32,
-        normalize: bool = True
+    image_inputs: list[Path | str],
+    model: Any,
+    lang_tags: list[str],
+    zero_tags: list[str],
+    threshold: float,
+    batch_size: int = 32,
+    normalize: bool = True,
 ) -> Iterator[TagResult | None]:
     """
     批量评估图像标签
@@ -354,7 +360,7 @@ def evaluate_batch(
 
     # 分批处理
     for batch_start in range(0, len(image_inputs), batch_size):
-        batch_paths = image_inputs[batch_start:batch_start + batch_size]
+        batch_paths = image_inputs[batch_start : batch_start + batch_size]
 
         # 1. 批量预处理
         valid_images = []
@@ -369,7 +375,9 @@ def evaluate_batch(
                 valid_indices.append(-1)
 
         # 2. 批量推理
-        predictions = predict_scores_batch(valid_images, model) if valid_images else np.array([])
+        predictions = (
+            predict_scores_batch(valid_images, model) if valid_images else np.array([])
+        )
 
         # 3. 批量过滤 + 加权
         pred_idx = 0

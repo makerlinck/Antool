@@ -2,6 +2,7 @@
 
 负责图像的预处理、推理和后处理。
 """
+
 from typing import Optional
 
 import numpy as np

@@ -1,6 +1,5 @@
-"""本地磁盘文件 Provider
+"""本地磁盘文件 Provider"""
 
-"""
 from pathlib import Path
 from typing import Optional, override
 
@@ -50,7 +49,9 @@ class LocalDiskFileProvider(FileProvider[bytes, Path]):
         return entries
 
     @override
-    def save(self, path: Path | str, content: bytes, *, overwrite: bool = False) -> bool:
+    def save(
+        self, path: Path | str, content: bytes, *, overwrite: bool = False
+    ) -> bool:
         p = self._resolve_path(path)
 
         if p.exists() and not overwrite:

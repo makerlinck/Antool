@@ -1,14 +1,15 @@
 import math, skimage, numpy as np
 
+
 def transform_and_pad_image(
-        image: np.ndarray,
-        target_width: int,
-        target_height: int,
-        scale: float | None = None,
-        rotation: float | None = None,
-        shift: tuple[float, float] | None = None,
-        order: int = 1,
-        mode: str = "edge",
+    image: np.ndarray,
+    target_width: int,
+    target_height: int,
+    scale: float | None = None,
+    rotation: float | None = None,
+    shift: tuple[float, float] | None = None,
+    order: int = 1,
+    mode: str = "edge",
 ) -> np.ndarray:
     """应用仿射变换处理图像，并通过边缘像素扩展填充至目标尺寸"""
     image_height, image_width = image.shape[:2]
@@ -54,11 +55,14 @@ def transform_and_pad_image(
     )
     return image
 
+
 import tensorflow as tf
+
+
 def preprocess_image(
-        image: np.ndarray,
-        target_size: tuple[int, int],
-        normalize: bool = True,
+    image: np.ndarray,
+    target_size: tuple[int, int],
+    normalize: bool = True,
 ) -> np.ndarray | None:
     """
     图像预处理 (最小计算单元 1)
@@ -72,7 +76,6 @@ def preprocess_image(
         预处理后的图像数组 (H, W, C)，失败返回 None
     """
     target_height, target_width = target_size
-
 
     # 调整尺寸
     image = tf.image.resize(
@@ -91,4 +94,3 @@ def preprocess_image(
         image = image.astype(np.float32) / 255.0
 
     return image
-

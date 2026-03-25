@@ -1,6 +1,5 @@
-"""远程文件 Provider（支持在线读取和缓存）
+"""远程文件 Provider（支持在线读取和缓存）"""
 
-"""
 from pathlib import Path
 from typing import Optional
 from core.interfaces import FileEntry, FileProvider
@@ -90,6 +89,7 @@ class RemoteFileProvider(FileProvider[bytes, str]):
         if not self._cache_dir:
             return None
         import hashlib
+
         key = hashlib.md5(url.encode()).hexdigest()
         return self._cache_dir / f"{key}.cache"
 

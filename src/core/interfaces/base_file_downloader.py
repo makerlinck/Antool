@@ -7,6 +7,7 @@ from typing import Protocol
 @dataclass
 class DownloadProgress:
     """下载进度"""
+
     total_bytes: int
     downloaded_bytes: int
     speed_bps: float | None = None  # bytes per second
@@ -22,8 +23,9 @@ class DownloadProgress:
 @dataclass
 class DownloadOptions:
     """下载选项"""
+
     chunk_size: int = 8192  # 每次读取的块大小
-    timeout: float = 30.0    # 超时时间（秒）
+    timeout: float = 30.0  # 超时时间（秒）
     headers: dict[str, str] | None = None  # 自定义请求头
     resume: bool = True  # 支持断点续传
 

@@ -2,6 +2,7 @@
 
 接口适配层，定义 Use Case 与基础设施之间的边界。
 """
+
 from typing import Protocol
 
 from core.entities import ImageTask, EvaluationResult
