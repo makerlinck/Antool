@@ -88,7 +88,10 @@ class BatchScheduler:
         uid_to_result: dict[str, EvaluationResult] = {}
 
         with ProcessPoolExecutor(max_workers=self.max_workers) as pool:
-            futures = [pool.submit(_process_batch_wrapper, batch) for batch in batches]
+            futures = [
+                pool.submit(_process_batch_wrapper, batch, self.batch_size)
+                for batch in batches
+            ]
 
             for i, future in enumerate(futures):
                 batch_results = future.result()
@@ -109,12 +112,12 @@ class BatchScheduler:
         return [uid_to_result[task.uid] for task in tasks]
 
 
-def _process_batch_wrapper(tasks: list[ImageTask]) -> list[EvaluationResult]:
+def _process_batch_wrapper(tasks: list[ImageTask], batch_size: int = 16) -> list[EvaluationResult]:
     """进程池处理包装函数
 
     注意：进程池中需要重新初始化处理器。
     """
     from infrastructure.evaluations.processor import create_processor
 
-    processor = create_processor()
+    processor = create_processor(batch_size=batch_size)
     return processor.process(tasks)

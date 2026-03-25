@@ -13,7 +13,7 @@ from litestar import websocket, WebSocket
 from litestar.exceptions import WebSocketException
 
 from infrastructure.cancel import CancelReason, get_cancellation, CancelledError
-from interactors import EvaluateImageInteractor
+from interactors import ImageEvaluationInteractor
 
 # 延迟导入避免循环依赖
 # from apps.main import _evaluation_interactor 会在函数内使用
@@ -120,7 +120,7 @@ async def _handle_batch(
         raise RuntimeError("Evaluation service not initialized")
 
     # 创建 batch interactor，复用已有的 processor 和 scheduler
-    interactor = EvaluateImageInteractor(
+    interactor = ImageEvaluationInteractor(
         processor=_evaluation_interactor._processor,
         scheduler=_evaluation_interactor._scheduler,
         enable_metrics=True,

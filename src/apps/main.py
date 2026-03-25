@@ -9,10 +9,11 @@ from litestar import Litestar, get
 
 from configs import Config
 from core.interfaces.evaluation import ImageProcessor, TaskScheduler
-from interactors import EvaluateImageInteractor
+from interactors import ImageEvaluationInteractor
 from infrastructure.evaluations.model_loader import SharedModelLoader
 from infrastructure.evaluations.scheduler import BatchScheduler
 from infrastructure.evaluations.processor import ImageEvaluationProcessor
+from infrastructure.evaluations.processor_cpu import CPUOptimizedProcessor
 from infrastructure.cancel import CancelReason, get_cancellation
 from infrastructure.metrics import get_metrics
 
@@ -21,7 +22,7 @@ from .builder import AppBuilder
 # 模块级日志记录器
 logger: logging.Logger
 _app_config: Config | None = None
-_evaluation_interactor: EvaluateImageInteractor | None = None
+_evaluation_interactor: ImageEvaluationInteractor | None = None
 
 
 # ============================================================================
@@ -40,8 +41,8 @@ async def health() -> dict:
 # ============================================================================
 
 
-def create_evaluation_usecase(config: Config) -> EvaluateImageInteractor:
-    """创建评估用例
+def create_evaluation_interactor(config: Config) -> ImageEvaluationInteractor:
+    """创建评估交互器
 
     按照依赖注入原则组装：
     1. 基础设施层：模型加载器（共享内存）
@@ -69,12 +70,14 @@ def create_evaluation_usecase(config: Config) -> EvaluateImageInteractor:
     )
 
     # 2. 处理器（预处理 + 推理 + 后处理）
-    processor: ImageProcessor = ImageEvaluationProcessor(
+    # 使用 CPU 优化版本（单张推理 + TF 预处理 + XLA）
+    processor: ImageProcessor = CPUOptimizedProcessor(
         model=model_loader.model,
         tags=model_loader.tags,
         threshold=0.5,
+        batch_size=config.batch_size,
     )
-    logger.debug("Image processor initialized")
+    logger.debug("CPU optimized processor initialized")
 
     # 3. 模型预热（触发 XLA 编译）
     logger.info("Warming up model...")
@@ -97,7 +100,7 @@ def create_evaluation_usecase(config: Config) -> EvaluateImageInteractor:
 
     # 5. 用例（复用 processor，避免重复创建）
     logger.info("Evaluation service initialized successfully")
-    return EvaluateImageInteractor(
+    return ImageEvaluationInteractor(
         processor=processor,
         scheduler=scheduler,
         enable_metrics=True,
@@ -128,7 +131,7 @@ def build_app(config: Config | None = None) -> Litestar:
     from apps.ws import ws_router
 
     # 4. 创建用例
-    _evaluation_interactor = create_evaluation_usecase(config)
+    _evaluation_interactor = create_evaluation_interactor(config)
 
     # 6. 构建应用
     app = (

@@ -34,6 +34,7 @@ logger = __import__("logging").getLogger(__name__)
 @dataclass
 class ImageData:
     """输入图像数据"""
+
     uid: str
     path: str
     image: Optional[np.ndarray]
@@ -43,6 +44,7 @@ class ImageData:
 @dataclass
 class BatchResult:
     """批量处理结果"""
+
     uid: str
     path: str
     rating: tuple
@@ -53,6 +55,7 @@ class BatchResult:
 @dataclass
 class BatchPerformance:
     """批量处理性能数据"""
+
     total_images: int
     valid_images: int
     decode_time_ms: float
@@ -61,7 +64,7 @@ class BatchPerformance:
     system_info: dict = field(default_factory=dict)
 
 
-class EvaluateImageInteractor:
+class ImageEvaluationInteractor:
     """批量图像评估交互器
 
     编排流程：
@@ -113,7 +116,9 @@ class EvaluateImageInteractor:
             images_data,
         )
         perf.decode_time_ms = (time.perf_counter() - t_decode) * 1000
-        logger.info(f"[interactor] Decode: {perf.decode_time_ms:.1f}ms for {len(images_data)} images")
+        logger.info(
+            f"[interactor] Decode: {perf.decode_time_ms:.1f}ms for {len(images_data)} images"
+        )
 
         # 分离有效和无效图片
         valid_images = [img for img in decoded_images if img.error is None]
@@ -122,13 +127,15 @@ class EvaluateImageInteractor:
         # 报告解码失败的图片
         for img in decoded_images:
             if img.error:
-                on_result(BatchResult(
-                    uid=img.uid,
-                    path=img.path,
-                    rating=("error", 0),
-                    tags=[],
-                    error=img.error,
-                ))
+                on_result(
+                    BatchResult(
+                        uid=img.uid,
+                        path=img.path,
+                        rating=("error", 0),
+                        tags=[],
+                        error=img.error,
+                    )
+                )
 
         if not valid_images:
             on_error("No valid images to process")
@@ -141,7 +148,9 @@ class EvaluateImageInteractor:
             ImageTask(image=img.image, uid=img.uid, path=img.path)
             for img in valid_images
         ]
-        logger.debug(f"[interactor] Task creation: {(time.perf_counter()-t_tasks)*1000:.1f}ms")
+        logger.debug(
+            f"[interactor] Task creation: {(time.perf_counter()-t_tasks)*1000:.1f}ms"
+        )
 
         # 3. 调用调度器处理
         t_infer = time.perf_counter()
@@ -152,18 +161,22 @@ class EvaluateImageInteractor:
         try:
             results = self._scheduler.submit(tasks, self._processor)
             perf.inference_time_ms = (time.perf_counter() - t_infer) * 1000
-            logger.info(f"[interactor] Schedule: {perf.inference_time_ms:.1f}ms for {len(tasks)} tasks")
+            logger.info(
+                f"[interactor] Schedule: {perf.inference_time_ms:.1f}ms for {len(tasks)} tasks"
+            )
 
             # 4. 流式回调结果
             for i, (task, result) in enumerate(zip(tasks, results)):
                 if cancellation and cancellation.is_cancelled:
                     break
-                on_result(BatchResult(
-                    uid=task.uid,
-                    path=task.path,
-                    rating=(result.rating.label, result.rating.score),
-                    tags=[(tag.name, tag.score) for tag in result.tags],
-                ))
+                on_result(
+                    BatchResult(
+                        uid=task.uid,
+                        path=task.path,
+                        rating=(result.rating.label, result.rating.score),
+                        tags=[(tag.name, tag.score) for tag in result.tags],
+                    )
+                )
 
         except CancelledError:
             raise

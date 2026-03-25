@@ -1,9 +1,10 @@
 """用例层测试"""
+
 import pytest
 import numpy as np
 
 from core.entities import ImageTask, EvaluationResult
-from interactors import EvaluateImageInteractor
+from interactors import ImageEvaluationInteractor
 
 
 class MockProcessor:
@@ -44,7 +45,7 @@ class TestEvaluateImageUseCase:
         """测试单张图像评估"""
         processor = MockProcessor()
         scheduler = MockScheduler(processor)
-        usecase = EvaluateImageInteractor(processor=processor, scheduler=scheduler)
+        usecase = ImageEvaluationInteractor(processor=processor, scheduler=scheduler)
 
         img = np.zeros((100, 100, 3), dtype=np.uint8)
         result = usecase.execute(img)
@@ -57,7 +58,7 @@ class TestEvaluateImageUseCase:
         """测试批量图像评估"""
         processor = MockProcessor()
         scheduler = MockScheduler(processor)
-        usecase = EvaluateImageInteractor(processor=processor, scheduler=scheduler)
+        usecase = ImageEvaluationInteractor(processor=processor, scheduler=scheduler)
 
         images = [
             np.zeros((100, 100, 3), dtype=np.uint8),
@@ -80,7 +81,7 @@ class TestEvaluateImageUseCase:
         """
         processor = MockProcessor()
         scheduler = MockScheduler(processor)  # 会反转顺序
-        usecase = EvaluateImageInteractor(processor=processor, scheduler=scheduler)
+        usecase = ImageEvaluationInteractor(processor=processor, scheduler=scheduler)
 
         # 创建带有自定义 UID 的任务
         images = [
@@ -101,7 +102,7 @@ class TestEvaluateImageUseCase:
         """测试空批次"""
         processor = MockProcessor()
         scheduler = MockScheduler(processor)
-        usecase = EvaluateImageInteractor(processor=processor, scheduler=scheduler)
+        usecase = ImageEvaluationInteractor(processor=processor, scheduler=scheduler)
 
         results = usecase.execute([])
 

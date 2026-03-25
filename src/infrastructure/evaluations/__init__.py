@@ -1,25 +1,29 @@
 """评估引擎模块
 
-基于 DeepDanbooru 的图像标签评估系统。
-提供从图像输入到标签输出的完整处理流程。
+基于 DeepDanbooru (https://github.com/KichangKim/DeepDanbooru) 的图像标签评估系统，使用 tf.data 流水线优化性能。
 
-设计目标：
-1. 单一入口：`evaluate()` 函数
-2. 独立运行：不依赖外部服务或复杂配置
-3. 性能监控：内置计时和指标收集
-4. 可配置：支持阈值、并行度等参数
+架构：
+- ImageEvaluationProcessor: tf.data 预处理 + 批量推理 + 后处理
+- BatchScheduler: 智能调度（小批量直接处理，大批量进程池）
+- SharedModelLoader: 模型单例加载，XLA JIT 编译
 
 使用示例：
-    from infrastructure.evaluations import evaluate
+    from infrastructure.evaluations import create_processor, BatchScheduler
 
-    results = evaluate(
-        images=[(uid, path, image_array), ...],
-        model_path="resources/models/v3-20211112-sgd-e28",
-        threshold=0.5,
-    )
+    processor = create_processor(batch_size=16)
+    scheduler = BatchScheduler(thread_threshold=1000)
+
+    results = scheduler.submit(tasks, processor)
 """
 
 from .processor import ImageEvaluationProcessor, create_processor
+from .processor_cpu import CPUOptimizedProcessor, create_cpu_processor
 from .scheduler import BatchScheduler
 
-__all__ = ["ImageEvaluationProcessor", "create_processor", "BatchScheduler"]
+__all__ = [
+    "ImageEvaluationProcessor",
+    "create_processor",
+    "CPUOptimizedProcessor",
+    "create_cpu_processor",
+    "BatchScheduler",
+]
