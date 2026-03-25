@@ -1,0 +1,29 @@
+{
+    "id": "LSPZE7K7KNCPD",
+    "version": "0.1.7",
+    "platform": "all",
+    "arch": "all",
+    "name": "AntLLM工具",
+    "logo": "/logo.png",
+    "keywords": ["utility","tool","efficient","front-end"],
+    "devTools": false,
+    "main":
+    {
+        "url": "index.html",
+        "width": 480,
+        "height": 640,
+        "minWidth": 480,
+        "minHeight": 640,
+        "maxWidth": 480,
+        "maxHeight": 1080,
+        "alwaysOnTop": true,
+        "frame": true,
+        "fullscreenable": false,
+        "maximizable": false,
+        "minimizable": true,
+        "resizable": true,
+        "backgroundColor": "#ffffff",
+        "multiple": false,
+        "runAfterInstall": true
+    }
+}
