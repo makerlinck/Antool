@@ -1,0 +1,32 @@
+{
+    "image_width": 512,
+    "image_height": 512,
+    "database_path": "F:/Dataset/danbooru-family/danbooru-training-20211112.sqlite",
+    "minimum_tag_count": 20,
+    "model": "resnet_custom_v3",
+    "minibatch_size": 4,
+    "epoch_count": 32,
+    "export_model_per_epoch": 4,
+    "checkpoint_frequency_mb": 1000,
+    "console_logging_frequency_mb": 50,
+    "optimizer": "sgd",
+    "learning_rates": [
+        {
+            "used_epoch": 0,
+            "learning_rate": 5.0
+        }
+    ],
+    "rotation_range": [
+        0.0,
+        360.0
+    ],
+    "scale_range": [
+        0.9,
+        1.1
+    ],
+    "shift_range": [
+        -0.1,
+        0.1
+    ],
+    "mixed_precision": false
+}

@@ -1,0 +1,14 @@
+[
+    {
+        "name": "General",
+        "start_index": 0
+    },
+    {
+        "name": "Character",
+        "start_index": 6891
+    },
+    {
+        "name": "System",
+        "start_index": 9173
+    }
+]

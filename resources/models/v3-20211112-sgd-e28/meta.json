@@ -1,0 +1,8 @@
+{
+    "id":"v3-20211112-sgd-e28",
+    "network_type" : "DeepDanbooru_v3",
+    "dataset" : "20211112",
+    "optimizer" : "SGD",
+    "used_epoch" : "28",
+    "model_url" : "https://github.com/KichangKim/DeepDanbooru/releases/download/v3-20211112-sgd-e28/deepdanbooru-v3-20211112-sgd-e28.zip"
+}
