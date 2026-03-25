@@ -2,6 +2,7 @@
 
 组装所有依赖并启动应用。
 """
+
 import logging
 
 from litestar import Litestar, get
@@ -27,6 +28,7 @@ _evaluation_interactor: EvaluateImageInteractor | None = None
 # HTTP 端点
 # ============================================================================
 
+
 @get("/health")
 async def health() -> dict:
     """健康检查"""
@@ -36,6 +38,7 @@ async def health() -> dict:
 # ============================================================================
 # 依赖组装
 # ============================================================================
+
 
 def create_evaluation_usecase(config: Config) -> EvaluateImageInteractor:
     """创建评估用例
@@ -61,7 +64,9 @@ def create_evaluation_usecase(config: Config) -> EvaluateImageInteractor:
     metrics.model_load_end()
 
     load_duration = metrics.model_load_duration_ms
-    logger.info(f"Model loaded. Tags count: {len(model_loader.tags)}, Duration: {load_duration:.2f}ms")
+    logger.info(
+        f"Model loaded. Tags count: {len(model_loader.tags)}, Duration: {load_duration:.2f}ms"
+    )
 
     # 2. 处理器（预处理 + 推理 + 后处理）
     processor: ImageProcessor = ImageEvaluationProcessor(
@@ -75,6 +80,7 @@ def create_evaluation_usecase(config: Config) -> EvaluateImageInteractor:
     logger.info("Warming up model...")
     from core.entities import ImageTask
     import numpy as np
+
     dummy_input = np.random.rand(256, 256, 3).astype(np.float32)
     processor.process([ImageTask(image=dummy_input, uid="warmup")])
     logger.info("Model warmup complete")
@@ -85,7 +91,9 @@ def create_evaluation_usecase(config: Config) -> EvaluateImageInteractor:
         max_workers=config.max_concurrent,
         batch_size=config.batch_size,
     )
-    logger.debug(f"Batch scheduler initialized: workers={config.max_concurrent}, batch_size={config.batch_size}")
+    logger.debug(
+        f"Batch scheduler initialized: workers={config.max_concurrent}, batch_size={config.batch_size}"
+    )
 
     # 5. 用例（复用 processor，避免重复创建）
     logger.info("Evaluation service initialized successfully")
@@ -116,7 +124,7 @@ def build_app(config: Config | None = None) -> Litestar:
     logger.info("=" * 50)
 
     # 3. 导入路由
-    from apps.api import router as api_router
+    # from apps.api import router as api_router
     from apps.ws import ws_router
 
     # 4. 创建用例
@@ -126,7 +134,7 @@ def build_app(config: Config | None = None) -> Litestar:
     app = (
         AppBuilder(config)
         .with_service("evaluation", _evaluation_interactor)
-        .with_router(api_router)
+        # .with_router(api_router)
         .with_router(ws_router)
         .with_route_handler(health)
         .on_startup(lambda: logger.info(f"✅ {config.app_name} HTTP server ready"))
@@ -145,6 +153,7 @@ async def _on_shutdown() -> None:
     """
     global logger
     import time
+
     t0 = time.perf_counter()
 
     cancellation = get_cancellation()
@@ -173,15 +182,33 @@ async def _on_shutdown() -> None:
     logger.info(f"[{time.perf_counter()-t0:.3f}s] Shutdown complete")
 
 
-# 默认应用实例
-app = build_app()
+# 应用实例（懒加载）
+_app_instance: Litestar | None = None
+
+
+def get_app() -> Litestar:
+    global _app_instance
+    if _app_instance is None:
+        _app_instance = build_app()
+    return _app_instance
+
+
+# 别名供 uvicorn 使用
+app = get_app()
 
 
 if __name__ == "__main__":
     import uvicorn
 
+    _app = get_app()
+    print("Antool API server ready")
+    uvicorn.run(_app, host="127.0.0.1", port=8000)
+    import uvicorn
+
     # 注册关闭时取消所有任务
     cancellation = get_cancellation()
-    cancellation.add_listener(lambda reason: logger.warning(f"Cancellation triggered: {reason}"))
+    cancellation.add_listener(
+        lambda reason: logger.warning(f"Cancellation triggered: {reason}")
+    )
 
     uvicorn.run("apps.main:app", host="127.0.0.1", port=8000)

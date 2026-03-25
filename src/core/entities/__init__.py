@@ -35,27 +35,29 @@ class Rating:
 class ImageTask:
     """图像任务实体
 
-    包装图像数据，附带唯一标识。
+    包装图像数据，附带唯一标识和路径。
     用于追踪处理流程中的图像。
     """
     image: np.ndarray | None
     uid: str = field(default_factory=lambda: uuid4().hex)
+    path: str = ""  # 原始文件路径
 
     @classmethod
-    def from_image(cls, image: np.ndarray, uid: str | None = None) -> "ImageTask":
+    def from_image(cls, image: np.ndarray, uid: str | None = None, path: str = "") -> "ImageTask":
         """从图像创建任务"""
-        return cls(image=image, uid=uid or uuid4().hex)
+        return cls(image=image, uid=uid or uuid4().hex, path=path)
 
 
 @dataclass(frozen=True, slots=True)
 class EvaluationResult:
     """评估结果实体
 
-    包含原始任务 UID，支持乱序返回后的结果匹配。
+    包含原始任务 UID 和路径，支持乱序返回后的结果匹配。
     """
     uid: str              # 对应 ImageTask 的 UID
     rating: Rating
     tags: tuple[Tag, ...]
+    path: str = ""        # 原始文件路径
 
     @classmethod
     def from_raw(
@@ -63,12 +65,14 @@ class EvaluationResult:
         uid: str,
         rating: tuple[str, float],
         tags: list[tuple[str, float]],
+        path: str = "",
     ) -> "EvaluationResult":
         """从原始数据创建"""
         return cls(
             uid=uid,
             rating=Rating(label=rating[0], score=rating[1]),
             tags=tuple(Tag(name=n, score=s) for n, s in tags),
+            path=path,
         )
 
     def to_raw(self) -> tuple[str, tuple[str, float], list[tuple[str, float]]]:

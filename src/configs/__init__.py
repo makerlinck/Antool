@@ -26,7 +26,7 @@ class Config(
         max_concurrent: int = 4,
         max_tasks: int = 100,
         xla_boost_enable_auto: bool = True,
-        batch_thread_threshold: int = 8,
+        batch_thread_threshold: int = 1000,
         batch_size: int = 32,
         intra_op_parallelism: int = 4,
         inter_op_parallelism: int = 4,

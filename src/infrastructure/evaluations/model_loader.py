@@ -51,6 +51,8 @@ class SharedModelLoader:
         if not model_path.exists():
             raise FileNotFoundError(f"Model not found: {model_path}")
 
+        # 启用 XLA JIT 编译（加速 CPU 推理）
+        tf.config.optimizer.set_jit(True)
         self._model = tf.keras.models.load_model(str(model_path), compile=False)
 
     def _load_tags(self) -> None:
@@ -63,9 +65,11 @@ class SharedModelLoader:
             self._tags = [line.strip() for line in f if line.strip()]
 
     def _warmup(self) -> None:
-        """预热推理"""
-        dummy = np.zeros((1, *self._model.input_shape[1:]), dtype=np.float32)
-        self._model.predict(dummy, verbose=0)
+        """预热推理 - 使用随机数据确保 XLA 编译完整计算路径"""
+        # 模型加载后直接使用
+        model = self.model
+        dummy = np.random.rand(1, *model.input_shape[1:]).astype(np.float32)
+        model.predict(dummy, verbose=0)
 
     @property
     def model(self):

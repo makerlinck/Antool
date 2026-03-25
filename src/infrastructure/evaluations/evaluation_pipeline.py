@@ -9,7 +9,9 @@
 └─────────────────────────────────────────────────────────────┘
 """
 
+import logging
 import math
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator
@@ -18,7 +20,50 @@ import numpy as np
 import skimage.transform
 import tensorflow as tf
 
-tf.config.optimizer.set_jit(True)  # 启用XLA加速
+logger = logging.getLogger(__name__)
+
+# ============================================================================
+# 时间追踪工具
+# ============================================================================
+
+
+class StageTimer:
+    """阶段计时器 - 追踪每个处理阶段的耗时"""
+
+    def __init__(self):
+        self.t0: float = 0
+        self.t_preprocess: float = 0
+        self.t_inference: float = 0
+        self.t_postprocess: float = 0
+
+    def start(self):
+        self.t0 = time.perf_counter()
+
+    def record_preprocess(self):
+        t = time.perf_counter()
+        self.t_preprocess += t - self.t0
+        self.t0 = t
+
+    def record_inference(self):
+        t = time.perf_counter()
+        self.t_inference += t - self.t0
+        self.t0 = t
+
+    def record_postprocess(self):
+        t = time.perf_counter()
+        self.t_postprocess += t - self.t0
+
+    def log_summary(self, num_images: int):
+        logger.info(
+            f"[pipeline] preprocess={self.t_preprocess*1000:.1f}ms, "
+            f"inference={self.t_inference*1000:.1f}ms, "
+            f"postprocess={self.t_postprocess*1000:.1f}ms "
+            f"({num_images} images)"
+        )
+
+    def total_ms(self) -> float:
+        return (self.t_preprocess + self.t_inference + self.t_postprocess) * 1000
+
 
 # 模块级常量
 CENSORED_KEYS = frozenset(
@@ -300,46 +345,10 @@ def weighted_result(
     return TagResult(tags=raw_result.tags.copy(), rating=rating)
 
 
-# ============================================================================
 # 高层 API (组合最小单元)
-# ============================================================================
 
 
-def evaluate_image(
-    image_input: Path | str,
-    model: Any,
-    lang_tags: list[str],
-    zero_tags: list[str],
-    threshold: float,
-    normalize: bool = True,
-) -> Iterator[tuple[str, float]] | None:
-    """
-    评估单张图像的标签
-
-    流程: preprocess_image → predict_scores → filter_tags → weighted_result
-    """
-    target_size = (model.input_shape[1], model.input_shape[2])
-
-    # 1. 预处理
-    image = preprocess_image(image_input, target_size, normalize)
-    if image is None:
-        return None
-
-    # 2. 推理
-    scores = predict_scores(image, model)
-
-    # 3. 纯过滤
-    raw_result = filter_tags(scores, lang_tags, threshold)
-
-    # 4. 加权处理
-    result = weighted_result(raw_result, lang_tags, zero_tags)
-
-    # 输出
-    yield from result.tags
-    yield result.rating
-
-
-def evaluate_batch(
+def evaluate(
     image_inputs: list[Path | str],
     model: Any,
     lang_tags: list[str],
@@ -347,6 +356,7 @@ def evaluate_batch(
     threshold: float,
     batch_size: int = 32,
     normalize: bool = True,
+    log_perf: bool = True,
 ) -> Iterator[TagResult | None]:
     """
     批量评估图像标签
@@ -357,6 +367,8 @@ def evaluate_batch(
         return
 
     target_size = (model.input_shape[1], model.input_shape[2])
+    timer = StageTimer()
+    timer.start()
 
     # 分批处理
     for batch_start in range(0, len(image_inputs), batch_size):
@@ -374,10 +386,14 @@ def evaluate_batch(
             else:
                 valid_indices.append(-1)
 
+        timer.record_preprocess()
+
         # 2. 批量推理
         predictions = (
             predict_scores_batch(valid_images, model) if valid_images else np.array([])
         )
+
+        timer.record_inference()
 
         # 3. 批量过滤 + 加权
         pred_idx = 0
@@ -389,3 +405,8 @@ def evaluate_batch(
                 result = weighted_result(raw_result, lang_tags, zero_tags)
                 pred_idx += 1
                 yield result
+
+        timer.record_postprocess()
+
+    if log_perf:
+        timer.log_summary(len(image_inputs))

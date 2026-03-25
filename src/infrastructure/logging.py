@@ -33,9 +33,10 @@ class Logger:
 
     def setup(self) -> logging.Logger:
         """配置并返回日志记录器"""
-        logger = logging.getLogger(self.name)
-        logger.setLevel(self.min_level.level)
-        logger.handlers.clear()
+        # 配置根日志器，所有子模块都继承
+        root = logging.getLogger()
+        root.setLevel(self.min_level.level)
+        root.handlers.clear()
 
         # 格式化器
         fmt = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
@@ -46,7 +47,7 @@ class Logger:
         console = logging.StreamHandler(sys.stdout)
         console.setLevel(self.min_level.level)
         console.setFormatter(formatter)
-        logger.addHandler(console)
+        root.addHandler(console)
 
         # 文件处理器（按日期命名）
         if self.log_file_dir:
@@ -58,10 +59,10 @@ class Logger:
             )
             file_handler.setLevel(self.min_level.level)
             file_handler.setFormatter(formatter)
-            logger.addHandler(file_handler)
+            root.addHandler(file_handler)
 
-        Logger._root_logger = logger
-        return logger
+        Logger._root_logger = root
+        return root
 
     @staticmethod
     def get_logger(name: str) -> logging.Logger:
